@@ -138,7 +138,7 @@ import org.bouncycastle.cert.ocsp.OCSPResp;
 import org.bouncycastle.cert.ocsp.RevokedStatus;
 import org.bouncycastle.cert.ocsp.SingleResp;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.ocsp.UnknownStatus;
+import org.bouncycastle.cert.ocsp.UnknownStatus;
 import org.bouncycastle.operator.OperatorException;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.tsp.TimeStampToken;
@@ -173,6 +173,15 @@ public class CCInstance {
         return instance;
     }
 
+    private String loadPKCS11Settings() {
+        String dest = "/Library/OpenSC/lib/opensc-pkcs11.so";
+        File file = new File(dest);
+        if (file.exists()) {
+            return dest;
+        }
+        return null;
+    }
+
     public final ArrayList<CCAlias> loadKeyStoreAndAliases() throws LibraryNotLoadedException, KeyStoreNotLoadedException, CertificateException, KeyStoreException, LibraryNotFoundException, AliasException {
         String pkcs11config = "name = SmartCard\n library = ";
         String path = null;
@@ -181,12 +190,12 @@ public class CCInstance {
         } else if (SystemUtils.IS_OS_LINUX) {
             path = "/usr/local/lib/libpteidpkcs11.so";
         } else if (SystemUtils.IS_OS_MAC_OSX) {
-            path = "/usr/local/lib/pteidpkcs11.dylib";
+            path = "/Library/OpenSC/lib/opensc-pkcs11.so";//"/usr/local/lib/pteidpkcs11.dylib";
+        }else{
+            throw new LibraryNotLoadedException(Bundle.getBundle().getString("unknownOS"));
         }
 
-        if (null == path) {
-            throw new LibraryNotLoadedException(Bundle.getBundle().getString("unknownOS"));
-        } else if (new File(path).exists()) {
+        if (new File(path).exists()) {
             pkcs11config += path;
         } else {
             String res = userLoadLibraryPKCS11();
@@ -365,16 +374,16 @@ public class CCInstance {
         final Certificate[] fullCertificateChain;
         if (filledMissingCertsFromChainInTrustedKeystore.length < 2) {
             fullCertificateChain = new Certificate[embeddedCertificateChain.size()];
-            for(int i=0; i< embeddedCertificateChain.size(); i++){
+            for (int i = 0; i < embeddedCertificateChain.size(); i++) {
                 fullCertificateChain[i] = embeddedCertificateChain.get(i);
             }
         } else {
             fullCertificateChain = new Certificate[embeddedCertificateChain.size() + filledMissingCertsFromChainInTrustedKeystore.length - 1];
             int i = 0;
-            for(i=0; i< embeddedCertificateChain.size(); i++){
+            for (i = 0; i < embeddedCertificateChain.size(); i++) {
                 fullCertificateChain[i] = embeddedCertificateChain.get(i);
             }
-            for(int f=1; f< filledMissingCertsFromChainInTrustedKeystore.length; f++, i++){
+            for (int f = 1; f < filledMissingCertsFromChainInTrustedKeystore.length; f++, i++) {
                 fullCertificateChain[i] = filledMissingCertsFromChainInTrustedKeystore[f];
             }
         }

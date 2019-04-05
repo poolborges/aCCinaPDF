@@ -36,6 +36,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.logging.Level;
@@ -53,7 +54,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -204,7 +205,7 @@ public class CertificatePropertiesDialog extends javax.swing.JDialog {
         if (x500subject.getRDNs(BCStyle.C).length > 0) {
             subjectC = x500subject.getRDNs(BCStyle.C)[0];
         }
-        if (!x500issuer.equals(x500subject)) {
+        if (x500issuer !=null && !x500issuer.equals(x500subject)) {
             RDN issuerCN = x500issuer.getRDNs(BCStyle.CN)[0];
             if (1 == x500issuer.getRDNs(BCStyle.OU).length) {
                 RDN issuerOU1 = x500issuer.getRDNs(BCStyle.OU)[0];
@@ -327,16 +328,18 @@ public class CertificatePropertiesDialog extends javax.swing.JDialog {
     }
 
     private String getCertificateCN(Certificate cert) {
-        X509Certificate x509cert = (X509Certificate) cert;
-        org.bouncycastle.asn1.x500.X500Name x500name = null;
+        String certificateCN = "";
         try {
+            X509Certificate x509cert = (X509Certificate) cert;
+            org.bouncycastle.asn1.x500.X500Name x500name;
             x500name = new JcaX509CertificateHolder(x509cert).getSubject();
+            RDN rdn = x500name.getRDNs(BCStyle.CN)[0];
+            certificateCN = WordUtils.capitalize(IETFUtils.valueToString(rdn.getFirst().getValue()).toLowerCase());
         } catch (CertificateEncodingException ex) {
             Logger.getLogger(CertificatePropertiesDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
-        RDN rdn = x500name.getRDNs(BCStyle.CN)[0];
 
-        return WordUtils.capitalize(IETFUtils.valueToString(rdn.getFirst().getValue()).toLowerCase());
+        return certificateCN;
     }
 
     private void expandTree(JTree tree) {
@@ -683,7 +686,8 @@ public class CertificatePropertiesDialog extends javax.swing.JDialog {
                 os.close();
 
                 Writer wr = new OutputStreamWriter(os, Charset.forName("UTF-8"));
-                wr.write(new sun.misc.BASE64Encoder().encode(buf));
+
+                wr.write(Base64.getEncoder().encodeToString(buf));
                 JOptionPane.showMessageDialog(this, Bundle.getBundle().getString("certSuccessfullyExported"), "", JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (CertificateEncodingException ex) {
@@ -691,12 +695,10 @@ public class CertificatePropertiesDialog extends javax.swing.JDialog {
             //Logger.getLogger(CertificatePropertiesDialog.class.getName()).log(Level.SEVERE, null, ex);
         } catch (FileNotFoundException ex) {
             JOptionPane.showMessageDialog(this, Bundle.getBundle().getString("certExportFailed") + "\n" + Bundle.getBundle().getString("noWritePermissions"), "", JOptionPane.ERROR_MESSAGE);
-            //Logger.getLogger(CertificatePropertiesDialog.class.getName()).log(Level.SEVERE, null, ex);
-            export(x509c);
+            Logger.getLogger(CertificatePropertiesDialog.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, Bundle.getBundle().getString("certExportFailed") + "\n" + Bundle.getBundle().getString("errorCreatingOutputFile"), "", JOptionPane.ERROR_MESSAGE);
-            //Logger.getLogger(CertificatePropertiesDialog.class.getName()).log(Level.SEVERE, null, ex);
-            export(x509c);
+            Logger.getLogger(CertificatePropertiesDialog.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

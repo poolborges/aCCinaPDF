@@ -230,11 +230,13 @@ public class ACCinaPDF {
                     }
                 }
             } else if (SystemUtils.IS_OS_MAC_OSX) {
+                /*
                 try {
-                    UIManager.setLookAndFeel("com.sun.java.swing.plaf.mac.MacLookAndFeel");
+                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
                     Logger.getLogger(ACCinaPDF.class.getName()).log(Level.SEVERE, null, ex);
                 }
+                */
             }
 
             new SplashScreen().setVisible(true);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+    <action>
+        <actionName>CUSTOM-package appbundle:bundle</actionName>
+        <displayName>package appbundle:bundle</displayName>
+        <goals>
+            <goal>package</goal>
+            <goal>appbundle:bundle</goal>
+        </goals>
+    </action>
+</actions>
